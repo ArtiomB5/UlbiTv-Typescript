@@ -1,0 +1,153 @@
+1. Типизация параметров, передаваемых в компоненту
+interface CardProps {
+  width?: string;
+  height?: string;
+  
+  типизация children - для реализации возможности обертывания
+  нашей компонентой других объектов
+  children?: React.ReactChild | React.ReactNode; 
+}
+
+export const Card = ({ width, height, children }: CardProps) => {
+  return (
+    <div style={{ width, height, border: "1px solid gray" }}>
+      {/* children - все, вокруг чего обернута наша компонента */}
+      {children}
+    </div>
+  );
+};
+
+вызов компоненты Card:
+<Card width={"200px"} height={"100px"}>
+  <button>Button</button>
+  <div>text</div>
+</Card>
+
+2. Второй вариант создания компоненты Card
+interface CardProps {
+  width?: string;
+  height?: string;
+}
+
+export const Card: React.FC<CardProps> = ({ width, height, children }) => {
+  return (
+    <div style={{ width, height, border: "1px solid gray" }}>
+      {/* children - все, вокруг чего обернута наша компонента */}
+      {children}
+    </div>
+  );
+};
+
+: React.FC<CardProps> - описание, что наша компонента является функциональной, и
+будет принимать типа CardProps. При таком описании компонента будет принимать
+children без описания данного паараметра в CardProps.
+
+3. Использование перечисления при типизации
+//enum - перечисление
+//https://medium.com/@sergey.bakaev/%D0%BF%D0%B5%D1%80%D0%B5%D1%87%D0%B8%D1%81%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F-enums-%D0%B2-typescript-2c264c6965c2
+export enum CardVariant {
+  outlined = "outlined", //тип карточки только с обводкой рамкой
+  primary = "primary" //тип карточки с фоном залитым каким-то цветом
+}
+
+interface CardProps {
+  width?: string;
+  height?: string;
+
+  //этим мы указываем, что ожидаем что-то из перечисления CardVariant
+  variant?: CardVariant;
+}
+
+export const Card: React.FC<CardProps> = ({
+  width,
+  height,
+  variant,
+  children
+}) => {
+  return (
+    <div
+      style={{
+        width,
+        height,
+        border: variant === CardVariant.outlined ? "1px solid gray" : "none",
+        backgroundColor: variant === CardVariant.primary ? "lightgray" : ""
+      }}
+    >
+      {/* children - все, вокруг чего обернута наша компонента */}
+      {children}
+    </div>
+  );
+};
+
+Вызов компоненты:
+<Card width={"200px"} height={"100px"} variant={CardVariant.primary}>
+        <button>Button</button>
+        <div>Card Component</div>
+      </Card>
+
+4. Типизация функций
+import { useState } from "react";
+
+export enum CardVariant {
+  outlined = "outlined", //тип карточки только с обводкой рамкой
+  primary = "primary" //тип карточки с фоном залитым каким-то цветом
+}
+
+interface CardProps {
+  width?: string;
+  height?: string;
+  variant?: CardVariant;
+
+  //типизация функции, передаваемой в компоненту как параметр
+  //типизация функции не принимающей параметры и ничего не возвращающей
+  //имя параметра через который передается функция может быть произвольным,
+  //не обязательно onClickHandler
+  onClickHandler: () => void;
+
+  //типизация принимающей параметром число и ничего не возвращающей
+  //имя параметра этой функции может быть произвольным, не обязательно param
+  onClickNumber: (param: number) => void;
+}
+
+export const Card: React.FC<CardProps> = ({
+  width,
+  height,
+  variant,
+  onClickHandler,
+  onClickNumber,
+  children
+}) => {
+  const [state, setState] = useState(0);
+  return (
+    <div
+      style={{
+        width,
+        height,
+        border: variant === CardVariant.outlined ? "1px solid gray" : "none",
+        backgroundColor: variant === CardVariant.primary ? "lightgray" : ""
+      }}
+    >
+      {children}
+      <button onClick={onClickHandler}>onClickHandler</button>
+      <button onClick={() => onClickNumber(state)}>onClickNumber</button>
+    </div>
+  );
+};
+
+Вызов компоненты:
+<Card
+        width={"200px"}
+        height={"100px"}
+        variant={CardVariant.outlined}
+        onClickHandler={() => alert("click")}
+        //если в типизации указано, что функци принимает параметр
+        //то при передаче в props такой функции мы это указываем
+        //в данном примере это реализовано с переменной number
+        //имя переменной, демонстрируещей прием функцией параметра может не совпадать
+        //с именем параметра в типизации пропсов:
+        //тут number в компоненте Card - param
+        onClickNumber={(number) => alert(number)}
+      >
+        <button>Button</button>
+        <div>Card Component</div>
+      </Card>
